@@ -1,16 +1,41 @@
-import Link from "next/link";
 import React from "react";
-import NavBar from "../../../components/NavBar";
-import Header from "../components/Header";
 import RestaurantNav from "../components/RestaurantNav";
 import MenuCard from "../components/MenuCard";
+import { PrismaClient, Item } from "@prisma/client";
 
-const RestaurantMenu = () => {
+const prisma = new PrismaClient();
+
+const fetchRestaurantMenu = async (slug: string): Promise<Item[]> => {
+  const restaurant = await prisma.restaurant.findUnique({
+    where: {
+      slug,
+    },
+    select: {
+      items: true,
+    },
+  });
+
+  if (!restaurant) {
+    throw new Error("asd");
+  }
+
+  return restaurant.items;
+};
+
+const RestaurantMenu = async ({
+  params: { slug },
+}: {
+  params: { slug: string };
+}) => {
+  const menu = await fetchRestaurantMenu(slug);
   return (
     <>
       <div className="bg-white w-[100%] rounded p-3 shadow">
-        <RestaurantNav />
-        <MenuCard />
+        <RestaurantNav slug={slug} />
+
+        {menu.map((x) => (
+          <MenuCard menu={x} key={x.id} />
+        ))}
       </div>
     </>
   );
