@@ -10,24 +10,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const bearerToken = req.headers["authorization"] as String;
-
-  if (!bearerToken) {
-    res.status(401).json({
-      errorMessage: "Unathorized request",
-    });
-  }
-
   const token = bearerToken.split(" ")[1];
-
-  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
-  try {
-    await jose.jwtVerify(token, secret);
-  } catch (e) {
-    res.status(401).json({
-      errorMessage: "Unathorized request",
-    });
-  }
 
   const payload = jwt.decode(token) as { email: string };
 
@@ -51,5 +34,16 @@ export default async function handler(
     },
   });
 
-  return res.json({ user, payload });
+  if (!user) {
+    res.status(401).json({ errorMessage: "User not found" });
+  }
+
+  return res.json({
+    id: user?.id,
+    firstName: user?.first_name,
+    lastname: user?.last_name,
+    city: user?.city,
+    phone: user?.phone,
+    email: user?.email,
+  });
 }
